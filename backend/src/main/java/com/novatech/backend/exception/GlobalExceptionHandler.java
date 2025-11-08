@@ -1,9 +1,9 @@
 package com.novatech.backend.exception;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -11,24 +11,18 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-
 import com.novatech.backend.dto.ErrorResponseDTO;
 
-//Centraliza el manejo de errores, devolvera respuestas json claras, interceptara a todos los @Controllers.
 @ControllerAdvice
-
 public class GlobalExceptionHandler {
-    //muestra cada validacion de un DTO recibido con @Valid falle
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        // guardar los errores campo -> mensaje
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        
         // da un json claro con los errores y estado 400
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
@@ -36,7 +30,6 @@ public class GlobalExceptionHandler {
     //Cuando el email ya existe
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponseDTO> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        
         ErrorResponseDTO errorResponse = new ErrorResponseDTO();
         errorResponse.setTimestamp(LocalDateTime.now());
         // 400
@@ -52,7 +45,6 @@ public class GlobalExceptionHandler {
     //cuando el usuario no se encuentre por ID, da mas control con el JSON
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
-        
         ErrorResponseDTO errorResponse = new ErrorResponseDTO();
         errorResponse.setTimestamp(LocalDateTime.now());
         // 404
@@ -61,13 +53,11 @@ public class GlobalExceptionHandler {
         //Usuario no encontrado
         errorResponse.setMessage(ex.getMessage()); 
         errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-        
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     //Error 500 del servidor o error de la base de datos
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex, WebRequest request) {
-        
         ErrorResponseDTO errorResponse = new ErrorResponseDTO();
         errorResponse.setTimestamp(LocalDateTime.now());
         // 500
@@ -75,10 +65,20 @@ public class GlobalExceptionHandler {
         errorResponse.setError("Internal Server Error");
         errorResponse.setMessage("Ocurrió un error inesperado. Por favor, intente más tarde.");
         errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-        
-        //Podemos imprimir el error en la consola
         ex.printStackTrace();
-        
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDTO> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        
+        ErrorResponseDTO errorResponse = new ErrorResponseDTO();
+        errorResponse.setTimestamp(LocalDateTime.now());
+        errorResponse.setStatus(HttpStatus.FORBIDDEN.value()); // 403
+        errorResponse.setError("Forbidden"); // Prohibido
+        errorResponse.setMessage(ex.getMessage()); // "No tienes permiso..."
+        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
+        
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 }

@@ -8,7 +8,6 @@ function RegisterPage() {
   const [lastname, setLastname] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -19,18 +18,18 @@ function RegisterPage() {
 
     try {
       await authService.register(name, lastname, email, password);
+
       setSuccess('¡Registro exitoso! Ahora puedes iniciar sesión.');
+
       setName('');
       setLastname('');
       setEmail('');
       setPassword('');
 
     } catch (err) {
-      
       console.error('Error en el registro:', err);
 
       if (err.response && err.response.data) {
-        
         if (typeof err.response.data === 'object') {
           const validationErrors = Object.values(err.response.data).join(', ');
           setError(validationErrors);
@@ -42,12 +41,12 @@ function RegisterPage() {
       }
     }
   };
+
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
         <h2>Crear Cuenta</h2>
 
-        {/* --- Nuevos Campos --- */}
         <div className="form-group">
           <label htmlFor="name">Nombre</label>
           <input
@@ -70,7 +69,6 @@ function RegisterPage() {
           />
         </div>
 
-        {/* --- Campos existentes --- */}
         <div className="form-group">
           <label htmlFor="email">Correo Electrónico</label>
           <input
@@ -98,19 +96,16 @@ function RegisterPage() {
           Registrarse
         </button>
 
-        {/*Nuevo enlace*/}
         <p style={{ textAlign: 'center', marginTop: '1rem' }}>
-          ¿Ya tienes una cuenta? <Link to="/login">Iniciar sesión aqui</Link>
+          ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
         </p>
 
-        {/* Mostramos el mensaje de error si existe */}
         {error && (
           <div className="error-message">
             {error}
           </div>
         )}
 
-        {/* Mostramos el mensaje de éxito si existe */}
         {success && (
           <div className="success-message">
             {success}

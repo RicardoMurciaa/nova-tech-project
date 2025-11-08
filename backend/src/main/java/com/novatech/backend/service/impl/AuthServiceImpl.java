@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,10 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider) {
+    public AuthServiceImpl(UserRepository userRepository,
+                            PasswordEncoder passwordEncoder,
+                            AuthenticationManager authenticationManager, 
+                            JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
@@ -37,22 +41,18 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.findByEmail(registerUserDTO.getEmail()).isPresent()) {
             throw new IllegalArgumentException("El email ya está en uso.");
         }
-
         User user = new User();
         user.setName(registerUserDTO.getName());
         user.setLastname(registerUserDTO.getLastname());
         user.setEmail(registerUserDTO.getEmail());
         user.setPassword(passwordEncoder.encode(registerUserDTO.getPassword()));
-
         user.setRole("ROLE_USER");
-
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser); 
     }
 
     @Override
     public AuthResponseDTO login(LoginDTO loginDTO) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginDTO.getEmail(),
@@ -62,8 +62,10 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = jwtTokenProvider.generateToken(authentication.getName());
-
-        return new AuthResponseDTO(token);
+        User user = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        UserDTO userDTO = convertToDTO(user);
+        return new AuthResponseDTO(token, userDTO);
     }
 
     private UserDTO convertToDTO(User user) {
@@ -72,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
         userDTO.setName(user.getName());
         userDTO.setLastname(user.getLastname());
         userDTO.setEmail(user.getEmail());
+        userDTO.setRole(user.getRole());
         return userDTO;
     }
 }

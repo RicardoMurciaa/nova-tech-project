@@ -10,9 +10,14 @@ import lombok.NoArgsConstructor;
 public class AuthResponseDTO {
     private String token;
     private String tokenType = "Bearer";
+    private UserDTO userDetails;
 
-    //Pasa el token
     public AuthResponseDTO(String token){
         this.token = token;
+    }
+
+    public AuthResponseDTO(String token, UserDTO userDetails) {
+        this.token = token;
+        this.userDetails = userDetails;
     }
 }
