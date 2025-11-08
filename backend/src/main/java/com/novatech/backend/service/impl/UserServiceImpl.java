@@ -1,18 +1,19 @@
 package com.novatech.backend.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import com.novatech.backend.dto.RegisterUserDTO;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.novatech.backend.dto.UserDTO;
 import com.novatech.backend.exception.ResourceNotFoundException;
 import com.novatech.backend.model.User;
 import com.novatech.backend.repository.UserRepository;
 import com.novatech.backend.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-
 public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
@@ -24,7 +25,8 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserDTO getUserById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
         return convertToDTO(user);
     }
 
@@ -42,6 +44,7 @@ public class UserServiceImpl implements UserService{
         userDTO.setName(user.getName());
         userDTO.setLastname(user.getLastname());
         userDTO.setEmail(user.getEmail());
+        userDTO.setRole(user.getRole());
         return userDTO;
     }
 }

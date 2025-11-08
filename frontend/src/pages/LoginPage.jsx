@@ -6,21 +6,18 @@ import './LoginPage.css';
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); 
+    setError('');
 
     try {
       const response = await authService.login(email, password);
       console.log('¡Login Exitoso!', response.data);
-      
       localStorage.setItem('token', response.data.token);
-
-      navigate('/dashboard'); 
+      localStorage.setItem('user', JSON.stringify(response.data.userDetails));
+      navigate('/dashboard');
       
     } catch (err) {
       console.error('Error en el login:', err);
@@ -65,10 +62,9 @@ function LoginPage() {
         </button>
 
         <p style={{ textAlign: 'center', marginTop: '1rem' }}>
-          ¿No tienes una cuenta? <Link to="/register">Regístrate aqui</Link>
+          ¿No tienes una cuenta? <Link to="/register">Regístrate aquí</Link>
         </p>
 
-        {/* Mostramos el mensaje de error solo si existe */}
         {error && (
           <div className="error-message">
             {error}
